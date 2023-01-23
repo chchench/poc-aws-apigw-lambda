@@ -34,6 +34,11 @@ variable "domain-certificate-arn" {
   default = ""
 }
 
+variable "api-gateway-api-key" {
+  type = string
+  default = "thisisjustaplaceholderapikeythatneedstobereplaced"
+}
+
 
 
 
@@ -128,7 +133,7 @@ resource "aws_lambda_permission" "allow-from-api-gateway" {
 
 # Creation of archive file for code before uploading to lambda
 
-data "archive_file" "lambda_function_payload" {
+data "archive_file" "lambda-function-payload" {
   type        = "zip"
   source_file = "lambda_lookup.py"
   output_path = "lambda_lookup_payload.zip"
@@ -139,33 +144,25 @@ resource "aws_lambda_function" "restapi-lookup-lambda" {
   role          = aws_iam_role.role.arn
 
   filename         = "lambda_lookup_payload.zip"
-  source_code_hash = data.archive_file.lambda_function_payload.output_base64sha256
+  source_code_hash = data.archive_file.lambda-function-payload.output_base64sha256
 
   # UPDATE THIS BASED ON YOUR NEEDS
   runtime       = "python3.8"
-  handler       = "lambda_lookup_payload.lambda_handler"
+  handler       = "lambda_lookup.handler"
 }
 
 
 # IAM
 
+resource "aws_iam_role_policy" "lambda-policy" {
+  name   = "${var.stack}policy-for-restapi-lookup-lambda"
+  role   = aws_iam_role.role.id
+  policy = file("policy_lambda.json")
+}
+
 resource "aws_iam_role" "role" {
   name               = "${var.stack}role-for-restapi-lookup-lambda"
-  assume_role_policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-POLICY
+  assume_role_policy = file("policy_assume_role.json")
 }
 
 
@@ -174,7 +171,7 @@ POLICY
 resource "aws_api_gateway_api_key" "restapi" {
   name    = "${var.stack}api-key"
   enabled = "true"
-  value   = "TBD-REPLACE-THIS-WITH-SOMETHING-ELSE"
+  value   = var.api-gateway-api-key
 }
 
 resource "aws_api_gateway_deployment" "restapi" {
@@ -254,4 +251,12 @@ resource "aws_api_gateway_base_path_mapping" "restapi" {
 
 output "api-gateway-endpoint-lookup-base-url" {
   value = aws_api_gateway_deployment.restapi.invoke_url
+}
+
+output "current-account-id" {
+  value = data.aws_caller_identity.current.account_id
+}
+
+output "api-gateway-api-key-deployed" {
+  value = var.api-gateway-api-key
 }
