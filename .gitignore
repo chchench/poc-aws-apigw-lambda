@@ -3,3 +3,4 @@
 terraform.tfstate
 terraform.tfstate.backup
 .DS_Store
+lambda_lookup_payload.zip
