@@ -128,39 +128,22 @@ resource "aws_lambda_permission" "allow-from-api-gateway" {
 
 # Creation of archive file for code before uploading to lambda
 
-/*
-resource "null_resource" "build_lambda_exec" {
-  triggers = {
-    source_code_hash = "${filebase64sha256("lambda_function_payload-python.py")}"
-  }
-  provisioner "local-exec" {
-    command     = "build.sh"
-    working_dir = "./"
-  }
-}
-*/
-
 data "archive_file" "lambda_function_payload" {
   type        = "zip"
-  source_file = "lambda_function_lookup.js"
-  output_path = "lambda_function_payload.zip"
-
-  #  depends_on = ["null_resource.build_lambda_exec"]
+  source_file = "lambda_lookup.py"
+  output_path = "lambda_lookup_payload.zip"
 }
 
 resource "aws_lambda_function" "restapi-lookup-lambda" {
   function_name = "restapi-lookup-lambda"
   role          = aws_iam_role.role.arn
 
-  filename         = "lambda_function_payload.zip"
+  filename         = "lambda_lookup_payload.zip"
   source_code_hash = data.archive_file.lambda_function_payload.output_base64sha256
 
-  #  runtime       = "python3.8"
-  #  handler       = "lambda_function_payload-python.lambda_handler"
-
-  handler = "lambda_function_lookup.handler"
-  runtime = "nodejs12.x"
-
+  # UPDATE THIS BASED ON YOUR NEEDS
+  runtime       = "python3.8"
+  handler       = "lambda_lookup_payload.lambda_handler"
 }
 
 
