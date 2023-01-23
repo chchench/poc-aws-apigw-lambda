@@ -143,7 +143,7 @@ resource "aws_lambda_function" "restapi-lookup-lambda" {
 
   # UPDATE THIS BASED ON YOUR NEEDS
   runtime       = "python3.8"
-  handler       = "lambda_lookup_payload.lambda_handler"
+  handler       = "lambda_lookup_payload.handler"
 }
 
 
