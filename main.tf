@@ -75,7 +75,7 @@ resource "aws_api_gateway_account" "main" {
 
 resource "aws_api_gateway_rest_api" "restapi" {
   name        = "restapi"
-  description = "This is the client API endpoint"
+  description = "Client API endpoint"
 
   endpoint_configuration {
     types = ["REGIONAL"]

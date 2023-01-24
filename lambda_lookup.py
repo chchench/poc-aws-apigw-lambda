@@ -6,9 +6,11 @@ import json
 client = boto3.client('dynamodb')
 table_name = "RequestRecords"
 
+
 def handler(event, context):
 
-    op = event['operation']
+    orig_body = json.loads(event['body'])
+    op = orig_body['operation']
 
     print('operation requested: ' + op)
 
@@ -18,10 +20,9 @@ def handler(event, context):
             'body': 'Invalid operation requested'
         }
 
-    id = event['id']
+    id = orig_body['id']
 
     print('item id requested: ' + id)
-
 
     data = client.query(
         TableName=table_name,
@@ -34,15 +35,15 @@ def handler(event, context):
         }
     )
 
+    print(data['Items'])
+
     lst = []
     for i in data['Items']:
         entry = json.loads(i['JSON']['S'])
-        val = entry['key']
-        lst.append(val)
-        print(val)
+        lst.append(entry)
 
     response_payload = json.dumps(lst)
-    
+
     response = {
         'statusCode': 200,
         'body': response_payload,
@@ -50,11 +51,5 @@ def handler(event, context):
             'Content-Type': 'application/json'
         },
     }
-    
+
     return response
-
-# {
-#   "operation": "read",
-#   "id": "1234567"
-# }
-
